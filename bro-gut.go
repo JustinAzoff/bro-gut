@@ -15,17 +15,22 @@ func grab_value(line string) string {
 	return val
 }
 
-func extract_sep(line string) []byte {
+func extract_sep(line string) string {
 	sep := grab_value(line)
 	sepchar, err := hex.DecodeString(sep[2:])
 	if err != nil {
 		log.Panic(err)
 	}
-	return sepchar
+	return string(sepchar)
 }
 
-func bro_cut(convert_times bool, ofs string) {
+func bro_cut(cols []string, convert_times bool, ofs string) {
+	col_size := len(cols)
+	var out string
+	var sep string
 	field_mapping := make(map[string]int)
+	time_fields := make(map[int]bool)
+	var fields []string
 	reader := bufio.NewReader(os.Stdin)
 	for {
 		line_, err := reader.ReadString('\n')
@@ -38,21 +43,36 @@ func bro_cut(convert_times bool, ofs string) {
 
 		if strings.HasPrefix(line, "#") {
 			if strings.HasPrefix(line, "#separator") {
-				sep := extract_sep(line)
-				fmt.Printf("%q\n", sep)
+				sep = extract_sep(line)
 			} else if strings.HasPrefix(line, "#fields") {
-				fields := strings.Split(line, "\t")[1:]
+				fields = strings.Split(line, "\t")[1:]
 				fmt.Printf("%q\n", fields)
 				for idx, field := range fields {
 					field_mapping[field] = idx
 				}
-				fmt.Printf("%q\n", field_mapping)
-				fmt.Printf("field query is index %d\n", field_mapping["query"])
 			} else if strings.HasPrefix(line, "#types") {
 				types := strings.Split(line, "\t")[1:]
-				fmt.Printf("%q\n", types)
+				for idx, typ := range types {
+					if typ == "time" {
+						time_fields[idx] = true
+					}
+				}
 			}
+			continue
 		}
+		parts := strings.Split(line, sep)
+		if col_size == 0 {
+			out = strings.Join(parts, ofs)
+		} else {
+			outparts := make([]string, col_size)
+			for idx, field := range cols {
+				if field_index, ok := field_mapping[field]; ok {
+					outparts[idx] = parts[field_index]
+				}
+			}
+			out = strings.Join(outparts, ofs)
+		}
+		fmt.Println(out)
 	}
 }
 
@@ -61,5 +81,7 @@ func main() {
 	var ofs = flag.String("ofs", "\t", "Sets a different output field separator.")
 	flag.Parse()
 
-	bro_cut(*convert_times, *ofs)
+	cols := flag.Args()
+
+	bro_cut(cols, *convert_times, *ofs)
 }
