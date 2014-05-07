@@ -46,7 +46,6 @@ func bro_cut(cols []string, convert_times bool, ofs string) {
 				sep = extract_sep(line)
 			} else if strings.HasPrefix(line, "#fields") {
 				fields = strings.Split(line, "\t")[1:]
-				fmt.Printf("%q\n", fields)
 				for idx, field := range fields {
 					field_mapping[field] = idx
 				}
@@ -61,17 +60,13 @@ func bro_cut(cols []string, convert_times bool, ofs string) {
 			continue
 		}
 		parts := strings.Split(line, sep)
-		if col_size == 0 {
-			out = strings.Join(parts, ofs)
-		} else {
-			outparts := make([]string, col_size)
-			for idx, field := range cols {
-				if field_index, ok := field_mapping[field]; ok {
-					outparts[idx] = parts[field_index]
-				}
+		outparts := make([]string, col_size)
+		for idx, field := range cols {
+			if field_index, ok := field_mapping[field]; ok {
+				outparts[idx] = parts[field_index]
 			}
-			out = strings.Join(outparts, ofs)
 		}
+		out = strings.Join(outparts, ofs)
 		fmt.Println(out)
 	}
 }
