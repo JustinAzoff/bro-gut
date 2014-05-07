@@ -73,7 +73,7 @@ func bro_cut(cols []string, convert_times bool, ofs string) {
 
 func main() {
 	var convert_times = flag.Bool("d", false, "Convert time values into human-readable format")
-	var ofs = flag.String("ofs", "\t", "Sets a different output field separator.")
+	var ofs = flag.String("F", "\t", "Sets a different output field separator.")
 	flag.Parse()
 
 	cols := flag.Args()
