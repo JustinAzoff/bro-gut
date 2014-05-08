@@ -7,7 +7,9 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"strings"
+	"time"
 )
 
 func contains_string(haystack []string, needle string) bool {
@@ -61,6 +63,16 @@ func find_output_indexes(fields []string, cols []string, negate bool) []int {
 	return out_indexes
 }
 
+func convert_time(ts string) string {
+	seconds, err := strconv.ParseFloat(ts, 64)
+	if err != nil {
+		return ts
+	}
+	ms := int64(1000 * seconds)
+	t := time.Unix(0, ms*int64(time.Millisecond))
+	return t.Format(time.RFC3339Nano)
+}
+
 func bro_cut(cols []string, convert_times bool, ofs string, negate bool) {
 	var out string
 	var sep string
@@ -97,7 +109,11 @@ func bro_cut(cols []string, convert_times bool, ofs string, negate bool) {
 		outparts := make([]string, len(out_indexes))
 		for idx, val := range out_indexes {
 			if val != -1 {
-				outparts[idx] = parts[val]
+				if convert_times && time_fields[idx] {
+					outparts[idx] = convert_time(parts[val])
+				} else {
+					outparts[idx] = parts[val]
+				}
 			}
 		}
 		out = strings.Join(outparts, ofs)
