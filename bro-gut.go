@@ -36,6 +36,15 @@ func extract_sep(line string) string {
 }
 func find_output_indexes(fields []string, cols []string, negate bool) []int {
 	var out_indexes []int
+
+	if len(cols) == 0 {
+		out_indexes = make([]int, len(fields))
+		for idx := range fields {
+			out_indexes[idx] = idx
+		}
+		return out_indexes
+	}
+
 	field_mapping := make(map[string]int)
 	for idx, field := range fields {
 		field_mapping[field] = idx
