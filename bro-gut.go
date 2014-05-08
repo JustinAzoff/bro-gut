@@ -28,6 +28,7 @@ func bro_cut(cols []string, convert_times bool, ofs string) {
 	col_size := len(cols)
 	var out string
 	var sep string
+	var out_indexes []int
 	field_mapping := make(map[string]int)
 	time_fields := make(map[int]bool)
 	var fields []string
@@ -49,6 +50,14 @@ func bro_cut(cols []string, convert_times bool, ofs string) {
 				for idx, field := range fields {
 					field_mapping[field] = idx
 				}
+				out_indexes = make([]int, col_size)
+				for idx, field := range cols {
+					if field_index, ok := field_mapping[field]; ok {
+						out_indexes[idx] = field_index
+					} else {
+						out_indexes[idx] = -1
+					}
+				}
 			} else if strings.HasPrefix(line, "#types") {
 				types := strings.Split(line, "\t")[1:]
 				for idx, typ := range types {
@@ -61,9 +70,9 @@ func bro_cut(cols []string, convert_times bool, ofs string) {
 		}
 		parts := strings.Split(line, sep)
 		outparts := make([]string, col_size)
-		for idx, field := range cols {
-			if field_index, ok := field_mapping[field]; ok {
-				outparts[idx] = parts[field_index]
+		for idx, val := range out_indexes {
+			if val != -1 {
+				outparts[idx] = parts[val]
 			}
 		}
 		out = strings.Join(outparts, ofs)
